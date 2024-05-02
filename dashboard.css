@@ -1,0 +1,94 @@
+  #cardContainer {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 1rem;
+    justify-content: center;
+    gap: 20px;
+  }
+  #duser{
+    color: #fff;
+    font-size: 1.5rem;
+    padding: 1rem;
+  }
+  .line{
+    background-color: #fff;
+  }
+.maincontainer{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.card {
+  background: linear-gradient(to right, #1f1f1f, #2b6be7);
+  padding: 1rem;
+  width: 20rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.7rem 1rem rgba(0, 0, 0, 0.3);
+  color: #fff;
+}
+.card a{
+  text-decoration: none;
+  color: #fff;
+}
+  .card h1{
+    display: flex;
+    justify-content: center;
+  }
+  .card p{
+    font-size: 1.5rem;
+  }
+.removebtn{
+  padding: 1rem;
+}
+  #addCardBtn {
+    background-color: #4caf50;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  #cardForm {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .deleteBtn {
+    display: flex;
+    background-color: #eb1f10;
+    color: #fff;
+    justify-content: center;
+    padding: 0.2rem;
+    text-align: center;
+    border: none;
+    border-radius: 2rem;
+    cursor: pointer;
+  }
+
+  .closeBtn {
+    background-color: #f44336;
+    color: #fff;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+
+
+
+
+
+
+
+.LoginButton{
+    border-radius:20rem ;
+}

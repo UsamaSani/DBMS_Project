@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./indexStyle.css">
+    <link rel="stylesheet" href="./login.css">
+    <link rel="stylesheet" href="./dashboard.css">
+    <title>PaperSetting</title>
+    <style>
+        main {
+          max-width: 600px;
+          margin: 20px auto;
+          padding: 20px;
+          background-color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    
+        label {
+          display: block;
+          margin-bottom: 8px;
+        }
+    
+        select {
+          width: 100%;
+          padding: 8px;
+          margin-bottom: 16px;
+          box-sizing: border-box;
+        }
+    
+        button {
+          background-color: #4caf50;
+          color: #fff;
+          padding: 10px;
+          border: none;
+          cursor: pointer;
+          border-radius: 4px;
+        }
+    
+        button:hover {
+          background-color: #45a049;
+        }
+    
+        #selected-questions {
+          margin-top: 20px;
+        }
+    
+        #selected-questions label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: bold;
+        }
+    
+        #selected-questions input {
+          margin-right: 8px;
+        }
+    
+        #generate-paper {
+          margin-top: 20px;
+        }
+      </style>
+</head>
+<body>
+    <header>
+        <div class="logoDiv">
+            <a href="index.html">
+                <h1 class="logo">Quiz<span>Forge</span></h1>
+            </a>
+        </div>
+        <div class="navbar">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="#service">Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="./profile.html" class="LoginButton" id="logout">LogOut</a></li>
+            </ul>
+        </div>
+    </header>
+    <!-------------------------------------------- HEADER END -->
+
+   <center><h1>PAPER SETTING MANAGEMENT SYSTEM</h1></center>
+   <h1>Question Paper PDF Generator</h1>
+
+   <main>
+    <div id="create-topic-question">
+        <center><label for="customTopic">Create your own topic:</label></center>
+        <center><input type="text" id="customTopic" placeholder="Custom Topic"></center>
+        <center><label for="customQuestion">Create your own question:</label></center>
+        <center> <input type="text" id="customQuestion" placeholder="Custom Question"></center>
+<br>
+      <center><button onclick="addCustomQuestion()">Add Custom Question</button></center>
+    </div>
+
+    <div id="generate-paper">
+      <label for="customTopics">Select a subject:</label>
+      <select id="customTopics">
+        <option value="">Select a subject</option>
+      </select>
+
+      <label for="customQuestions">Select custom questions:</label>
+      <select id="customQuestions" multiple size="4">
+        <!-- Custom questions for the selected custom topic will be dynamically added here -->
+      </select>
+
+      <!-- <button onclick="generatePaper()">Generate Paper</button> -->
+    </div>
+
+    <div id="review-paper">
+     <center><label for="startRoll">Enter start roll number:</label></center>
+     <center><input type="number" id="startRoll" placeholder="Start Roll Number"></center>
+     <center><label for="endRoll">Enter end roll number:</label></center>
+     <center><input type="number" id="endRoll" placeholder="End Roll Number"></center>
+<br>
+      <center><button onclick="reviewPaper()">Review Paper</button></center><br>
+      <div id="reviewed-paper"></div><br>
+      <center><button onclick="generatePaper()">Generate Paper</button></center>
+    </div>
+  </main>
+
+
+
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "", 
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+    };
+
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let currentClassKey;
+
+    function addTopic() {
+        const topicName = prompt("Enter a new topic:");
+        if (topicName) {
+            const topicsRef = ref(database, `topics/${currentClassKey}`);
+            const newTopicRef = push(topicsRef);
+            newTopicRef.set({
+                name: topicName,
+                questions: []
+            });
+            loadTopics();
+        }
+    }
+
+    function addQuestion() {
+        const selectedTopic = document.getElementById("customTopics").value;
+        const questionText = prompt("Enter a new question:");
+        if (questionText) {
+            const questionsRef = ref(database, `topics/${currentClassKey}/${selectedTopic}/questions`);
+            const newQuestionRef = push(questionsRef);
+            newQuestionRef.set(questionText);
+            loadQuestions(selectedTopic);
+        }
+    }
+
+    function loadTopics() {
+        const topicsSelect = document.getElementById("customTopics");
+        topicsSelect.innerHTML = '<option value="">Select a topic</option>';
+
+        const topicsRef = ref(database, `topics/${currentClassKey}`);
+        onValue(topicsRef, (snapshot) => {
+            const topicsData = snapshot.val();
+            if (topicsData) {
+                Object.keys(topicsData).forEach((key) => {
+                    const option = document.createElement("option");
+                    option.value = key;
+                    option.text = topicsData[key].name;
+                    topicsSelect.add(option);
+                });
+            }
+        });
+    }
+
+    function loadQuestions(selectedTopic) {
+        const questionsSelect = document.getElementById("customQuestions");
+        questionsSelect.innerHTML = '';
+
+        const questionsRef = ref(database, `topics/${currentClassKey}/${selectedTopic}/questions`);
+        onValue(questionsRef, (snapshot) => {
+            const questionsData = snapshot.val();
+            if (questionsData) {
+                Object.values(questionsData).forEach((question) => {
+                    const option = document.createElement("option");
+                    option.value = question;
+                    option.text = question;
+                    questionsSelect.add(option);
+                });
+            }
+        });
+    }
+
+    function generatePaper() {
+        const selectedQuestions = document.querySelectorAll('select[id="customQuestions"] option:checked');
+        if (selectedQuestions.length > 0) {
+            const studentId = prompt("Enter your student ID:");
+            if (studentId) {
+                const pdf = new jsPDF();
+                const pageWidth = pdf.internal.pageSize.width;
+
+                pdf.text("Question Paper", pageWidth / 2, 15, { align: 'center' });
+
+                let yPos = 30;
+                Array.from(selectedQuestions).forEach((question, index) => {
+                    pdf.text(`${index + 1}. ${question.value}`, 20, yPos);
+                    yPos += 10;
+                });
+
+                pdf.save(`QuestionPaper_${studentId}.pdf`);
+            }
+        } else {
+            alert("Please select at least one question.");
+        }
+    }
+
+    function reviewPaper() {
+        const startRoll = parseInt(document.getElementById("startRoll").value);
+  const endRoll = parseInt(document.getElementById("endRoll").value);
+
+  if (!isNaN(startRoll) && !isNaN(endRoll) && startRoll <= endRoll) {
+    const reviewedPaperDiv = document.getElementById("reviewed-paper");
+    reviewedPaperDiv.innerHTML = "<strong>Reviewed Paper:</strong><br>";
+
+    for (let roll = startRoll; roll <= endRoll; roll++) {
+      const questionsRef = database.ref(`questions/${roll}`);
+      questionsRef.once("value", (snapshot) => {
+        const questionsData = snapshot.val();
+
+        if (questionsData && questionsData.questions) {
+          reviewedPaperDiv.innerHTML += `<strong>Roll Number ${roll}:</strong><br>`;
+          questionsData.questions.forEach((question, index) => {
+            reviewedPaperDiv.innerHTML += `${index + 1}. ${question}<br>`;
+          });
+        } else {
+          reviewedPaperDiv.innerHTML += `No questions found for Roll Number ${roll}.<br>`;
+        }
+      });
+    }
+  } else {
+    alert("Please enter valid roll numbers with the start roll number less than or equal to the end roll number.");
+  }
+    }
+
+    function initializeClass(classKey) {
+        currentClassKey = classKey;
+        loadTopics();
+        console.log(`Initializing Paper Setting Page for Class: ${classKey}`);
+    }
+
+    // Initialization based on the class key (replace 'classKey123' with the actual class key)
+    initializeClass('classKey123');
+</script>
+
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.js"></script>
+
+<!-- <script src="./dashboard.js"></script> -->
+
+
+</html>

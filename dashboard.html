@@ -1,0 +1,241 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="./indexStyle.css">
+        <link rel="stylesheet" href="./login.css">
+        <link rel="stylesheet" href="./dashboard.css">
+        <title>Dashboard</title>
+    </head>
+
+    <body>
+        <header>
+            <div class="logoDiv">
+                <a href="index.html">
+                    <h1 class="logo">Quiz<span>Forge</span></h1>
+                </a>
+            </div>
+            <div class="navbar">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="#service">Services</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="./profile.html" class="LoginButton" id="logout">LogOut</a></li>
+                </ul>
+            </div>
+        </header>
+    <!------------------------------------ header end ---------------------------------------->
+
+
+    <br class="line">
+    <div class="maincontainer">
+
+    <div>
+        <img src="./images/profile.png" alt="" width="40rem"><span id="duser"></span>
+    </div>
+
+    <div id="cardContainer"></div>
+    <button id="addCardBtn">Add Card</button>
+    </div>
+
+        <div id="cardForm">
+            <button class="closeBtn" id="closeCardFormBtn">Close</button>
+            <form id="cardFormSubmit">
+                <label for="semester">Semester:</label>
+                <input type="text" id="semester" required>
+                <label for="department">Department:</label>
+                <input type="text" id="department" required>
+                <label for="section">Section:</label>
+                <input type="text" id="section" required>
+                <label for="course">Course:</label>
+                <input type="text" id="course" required>
+                <button type="submit">Create Card</button>
+            </form>
+        </div>
+
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+            import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+            import { getDatabase, set, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+            
+            let classIndex = 1;
+            let database;
+            let user;
+            
+            function openSettingPage(cardKey) {
+        const rules = {
+            department: "Computer Science", 
+            section: "A",  
+            allowedStudentIds: ["student1", "student2"] 
+        };
+
+        const rulesString = encodeURIComponent(JSON.stringify(rules));
+        window.open(`papersetting.html?key=${cardKey}&rules=${rulesString}`, '_blank');
+    }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                const userEmail = urlParams.get('email');
+
+                console.log("User Email:", userEmail);
+
+                const firebaseConfig = {
+                    apiKey: "",
+                    authDomain: "",
+                    databaseURL: "",
+                    projectId: "",
+                    storageBucket: "",
+                    messagingSenderId: "",
+                    appId: ""
+                };
+
+                const app = initializeApp(firebaseConfig);
+                database = getDatabase(app);
+
+                const auth = getAuth(app);
+                document.getElementById("logout").addEventListener("click", (e) => {
+                    e.preventDefault();
+                    signOut(auth)
+                        .then(() => {
+                            location.replace("login.html");
+                        }).catch((error) => {
+                            alert(error);
+                        });
+                });
+
+                onAuthStateChanged(auth, (currentUser) => {
+                    user = currentUser;
+                    if (!user || !user.uid) {
+                        location.replace("login.html");
+                    } else {
+                        fetchAndDisplayExistingCards();
+                        
+                        document.getElementById("duser").innerHTML = user.email 
+                    }
+                });
+
+                document.getElementById("addCardBtn").addEventListener("click", showCardForm);
+                document.getElementById("closeCardFormBtn").addEventListener("click", hideCardForm);
+                document.getElementById("cardFormSubmit").addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    addCard();
+                });
+
+                document.getElementById("cardContainer").addEventListener("click", function (event) {
+                    if (event.target.classList.contains("deleteBtn")) {
+                        removeCard(event);
+                        
+                    }
+                });
+            });
+
+            function showCardForm() {
+                document.getElementById('cardForm').style.display = 'block';
+            }
+
+            function hideCardForm() {
+                document.getElementById('cardForm').style.display = 'none';
+            }
+
+        function addCard() {
+        const semester = document.getElementById('semester').value;
+        const department = document.getElementById('department').value;
+        const section = document.getElementById('section').value;
+        const course = document.getElementById('course').value;
+
+        const cardData = {
+            semester,
+            department,
+            section,
+            course,
+            email: user.email,
+        };
+
+        const cardsRef = ref(database, `cards/${user.uid}`);
+        const newCardRef = push(cardsRef);
+
+        set(newCardRef, cardData)
+            .then(() => {
+                const cardContainer = document.getElementById('cardContainer');
+                const card = createCardElement(classIndex, cardData, newCardRef.key);
+                cardContainer.appendChild(card);
+
+                document.getElementById('semester').value = '';
+                document.getElementById('department').value = '';
+                document.getElementById('section').value = '';
+                document.getElementById('course').value = '';
+
+                hideCardForm();
+            })
+            .catch((error) => {
+                console.error("Error adding card:", error);
+            })
+            .finally(() => {
+        
+                classIndex++;
+            });
+    }
+
+
+        function createCardElement(index, cardData, cardKey) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.cardKey = cardKey;
+        card.innerHTML = `
+            <button class="deleteBtn">X</button>
+            <a href="javascript:void(0);" onclick="openSettingPage('${cardKey}')">
+            <div>
+            <h1>Class ${index}</h1>
+            <p>Semester: ${cardData.semester}</p>
+            <p>Department: ${cardData.department}</p>
+            <p>Section: ${cardData.section}</p>
+            <p>Course: ${cardData.course}</p>
+            </div>
+            </a>
+        `;
+
+        return card;
+    }
+
+
+
+            function removeCard(event) {
+                const cardElement = event.target.parentElement;
+                const cardKey = cardElement.dataset.cardKey;
+                const cardsRef = ref(database, `cards/${user.uid}/${cardKey}`);
+
+                remove(cardsRef)
+                    .then(() => {
+                        cardElement.remove();
+                    })
+                    .catch((error) => {
+                        console.error("Error removing card:", error);
+                    });
+            }
+
+            function fetchAndDisplayExistingCards() {
+            console.log("Fetching and displaying cards...");
+            const cardsRef = ref(database, `cards/${user.uid}`);
+            onValue(cardsRef, (snapshot) => {
+                const cardContainer = document.getElementById('cardContainer');
+                cardContainer.innerHTML = '';
+
+                if (snapshot.exists()) {
+                    const cardsData = snapshot.val();
+                    const cardKeys = Object.keys(cardsData);
+                    cardKeys.forEach((cardKey, index) => {
+                        const cardData = cardsData[cardKey];
+                        const card = createCardElement(index + 1, cardData, cardKey);
+                        cardContainer.appendChild(card);
+                    });
+                    classIndex = cardKeys.length + 1;
+                    console.log("classIndex:", classIndex);
+                }
+            });
+        }
+        </script>
+    </body>
+
+    </html>

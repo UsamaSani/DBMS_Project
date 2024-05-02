@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizForge</title>
+    <link rel="stylesheet" href="./login.css">
+    <link rel="stylesheet" href="./indexStyle.css">
+</head>
+<body> 
+    <header>
+        <div class="logoDiv">
+            <a href="index.html"><h1 class="logo">Quiz<span>Forge</span></h1></a>
+        </div>
+        <div class="navbar">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="./index.html #services">Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li ><a href="./login.html" class="LoginButton">LOGIN</a></li>
+            </ul>
+        </div>
+    </header>
+    <!------------------------------ header ends ---------------------------------------->
+    <section class="login-form">
+        <span id="error" style="color: red; margin: 0.5rem;"></span>
+        <form action="" class="login-box">
+            <label for="useremail" class="label">EMAIL</label>
+            <input type="email" class="user" id="useremail">
+            <label for="userpass" class="label">PASSWORD</label>
+            <input type="password" id="userpass" class="user">
+            <a href="./registeration.html" class="r-p-same">Register</a>
+            <a href="" class="r-p-same" id="forgetpass">Forget password</a>
+            <a href="" class="LoginButton" id="login">LOGIN</a>
+        </form>
+    </section>
+    <footer>
+        <p>&copy;CopyRights Reserved by DBMS Project Group (SMIU)</p>
+    </footer>
+</body>
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword , onAuthStateChanged ,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, set,ref} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+
+    const firebaseConfig = {
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "", 
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth(app);
+
+
+document.getElementById("login").addEventListener("click",(e)=>{
+    e.preventDefault()
+    var email = document.getElementById("useremail").value
+    var password = document.getElementById("userpass").value
+    
+    signInWithEmailAndPassword(auth, email, password)
+
+  .then((userCredential) => {
+    const user = userCredential.user;
+    location.replace("dashboard.html")
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    document.getElementById("error").innerHTML=error.message
+  });
+})
+
+
+document.getElementById("forgetpass").addEventListener("click",(e)=>{
+    e.preventDefault()
+    var email = document.getElementById("useremail").value
+sendPasswordResetEmail(auth, email)
+  .then(() => {
+    alert("reset link sent to your email")
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    alert(errorMessage)
+  });
+})
+
+const user = auth.currentUser;
+onAuthStateChanged(auth,(user)=>{
+    if(user){
+        const uid = user.uid;
+        const email = user.email
+        location.replace("dashboard.html?email=" + encodeURIComponent(email));
+    }
+})
+  </script>
+
+
+</html>
